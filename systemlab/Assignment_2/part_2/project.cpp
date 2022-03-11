@@ -22,6 +22,10 @@ void mtech_tray_lfu(int tray_size, string req, vector<string> &mt_tray, unordere
 
 void phd_tray_lru(int tray_size, string req, vector<string> &phd_tray, unordered_map<string, int> &phd_lookup, int &misses);
 
+void print_branch(vector<string> tray, unordered_map<string, int> lookup, string branch_name);
+
+void print_tray(vector<string> tray);
+
 
 int main(){
 
@@ -101,7 +105,8 @@ int library_records(vector<int> &subjects, vector<int> &tray, vector<string> &re
     while(getline(fout, str)){
         
         requests.push_back(str);
-        // cout<<str<<" 11 ";
+        // cout<<str<<endl;
+        fflush(stdin);
     }
 
     // for(auto ele : requests){
@@ -129,88 +134,41 @@ void librarian(vector<int> subjects, vector<int> tray, vector<string> requests){
 
     for(auto req : requests){
         
-        if(req[0] == 'B'){
-            
-            //Call the respected Btech. Tray function to handle the request
-            btech_tray_fifo(tray[0], req, bt_tray, bt_lookup, misses);
-            for(auto ele : bt_tray)
-                cout<<ele<<" T "<<endl;
-            cout<<"Total"<<bt_tray.size()<<endl;
-            cout<<req<<" Alpha ";
-            continue;
-        }
+        switch(req[0]){
+            case 'B' : //Call the respected Btech. Tray function to handle the request
+                        btech_tray_fifo(tray[0], req, bt_tray, bt_lookup, misses);
+                        // print_tray(bt_tray);
+                        break;
 
-        if(req[0] == 'M'){
-            //Call the respective Mtech tray function to handle the request
-            mtech_tray_lfu(tray[1], req, mt_tray, mt_lookup, misses);
-            // for(auto ele : mt_tray)
-            //     cout<<ele<<" T "<<endl;
-            // cout<<"Total"<<mt_tray.size()<<endl;
-            cout<<req<<" Alpha ";
-            continue;
-        }
+            case 'M' : //Call the respective Mtech tray function to handle the request
+                        mtech_tray_lfu(tray[1], req, mt_tray, mt_lookup, misses);
+                        // print_tray(mt_tray);
+                        break;
 
-        if(req[0] == 'P'){
-            //Call the respective PhD tray function to handle the request
-            phd_tray_lru(tray[2], req, phd_tray, phd_lookup, misses);
-            // for(auto ele : phd_tray)
-            //     cout<<ele<<" T "<<endl;
-            // cout<<"Total"<<phd_tray.size()<<endl;
-            cout<<req<<" Alpha ";
-            continue;
-        }
+            case 'P' : //Call the respective PhD tray function to handle the request
+                        phd_tray_lru(tray[2], req, phd_tray, phd_lookup, misses);
+                        // print_tray(phd_tray);
+                        break;
 
-        cout<<"Book not found in library : " << req << endl;
+            default  : cout<<"Book not found in library : " << req << endl;
+                        break;
+        } 
 
     }
 
     //Printing the details :
 
     //No of misses occured during entire day
-    cout<<" Misses : "<<misses<<endl<<endl;
+    cout<<"Misses : "<<misses<<endl<<endl;
 
-    //ID's which were issued the maximum.
-    vector<string> max_el;
-    int max_val = 0;
-    //For B.Tech
-    printf("B. Tech tray highest issue : ");
-    for(auto ele: bt_lookup){
-        // // cout<<bt_lookup[ele];
-        // if(max_val < ele.second){
-        //     max_el.clear();
-        //     max_el.push_back(ele.first);
-        //     // cout<<ele.first;
-        //     max_val = ele.second;
-        // }
-        // else if(max_val == ele.second){
-        //     max_el.push_back(ele.first);
-        // }
+    //For B.tech
+    print_branch(bt_tray, bt_lookup, "B. Tech");
 
-        cout<<ele.first<<" 00 "<<ele.second<<endl;
-    }
-    for(int i = 0; i < max_el.size(); ++i)
-        printf("%s\n", max_el[i]);
-    cout<<endl<<endl;
+    //For M. Tech
+    print_branch(mt_tray, mt_lookup, "M. Tech");
 
-    //For M.Tech
-    max_el.clear();
-    printf("M. Tech tray highest issue : ") ;
-    for(auto ele: mt_lookup){
-        cout<<ele.first<<" ";
-        if(max_val < ele.second){
-            max_el.clear();
-            max_el.push_back(ele.first);
-            max_val = ele.second;
-        }
-        else if(max_val == ele.second){
-            max_el.push_back(ele.first);
-        }
-    }
-    cout<<endl;
-    for(auto ele : max_el)
-        printf("%s\n", ele);
-    cout<<endl<<endl;
-
+    //For Phd
+    print_branch(phd_tray, phd_lookup, "PhD");
 
 
 }
@@ -219,7 +177,7 @@ void btech_tray_fifo(int tray_size, string req, vector<string> &bt_tray, unorder
 
     //Increase frequency as it is getting issued
     bt_lookup[req]++;
-    cout<<req<< " 99 "<< bt_lookup[req];
+    // cout<<req<< " 99 "<< bt_lookup[req];
     
     for(auto ele : bt_tray){
         if(!ele.compare(req)){
@@ -289,6 +247,7 @@ void mtech_tray_lfu(int tray_size, string req, vector<string> &mt_tray, unordere
 void phd_tray_lru(int tray_size, string req, vector<string> &phd_tray, unordered_map<string, int> &phd_lookup, int &misses){
 
     //LRU
+    phd_lookup[req]++;
 
     //Search .. If present add it again at back(top). 
 
@@ -316,4 +275,45 @@ void phd_tray_lru(int tray_size, string req, vector<string> &phd_tray, unordered
     return;
 
 
+}
+
+void print_branch(vector<string> tray, unordered_map<string, int> lookup, string branch_name){
+
+    //ID's which were issued the maximum.
+    vector<string> max_el;
+    int max_val = 0;
+
+    //For Branch
+    fflush(stdout);
+    cout<<branch_name<< " tray highest issue : " <<endl;
+
+    for(auto ele: lookup){
+        // cout<<lookup[ele];
+        if(max_val < ele.second){
+            max_el.clear();
+            max_el.push_back(ele.first);
+            // cout<<ele.first;
+            max_val = ele.second;
+        }
+        else if(max_val == ele.second){
+            max_el.push_back(ele.first);
+        }
+
+        // cout<<ele.first<<" 00 "<<ele.second<<endl;
+    }
+    for(int i = 0; i < max_el.size(); ++i)
+        cout<<max_el[i]<<endl;
+    cout<<endl;
+
+    cout<<branch_name<< " Tray : " <<endl;
+    print_tray(tray);
+
+    cout<<endl<<endl;
+
+}
+
+void print_tray(vector<string> tray){
+    for(auto ele : tray){
+        cout<<ele<<endl;
+    }
 }
